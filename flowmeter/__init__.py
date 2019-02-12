@@ -1,1 +1,3 @@
+import flowmeter
+
 name = "flowmeter"
