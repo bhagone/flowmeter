@@ -1,10 +1,3 @@
-from scapy.all import *
-import pandas as pd
-import numpy as np
-import binascii
-import gc
-from multiprocessing import Pool
-
 class Flowmeter:
 
     """
@@ -1186,7 +1179,7 @@ class Flowmeter:
             flow = self.build_dataframe(self._sessions[flow])
             src = self.get_src_ip(flow)
             dst = self.get_dst_ip(flow)
-            flow = self.remove_duplicate_flags_col(flow)
+            flow = remove_duplicate_flags_col(flow)
             src_df = flow[flow["src"]==src]
             dst_df = flow[flow["src"]==dst]
             result = pd.DataFrame(columns=self.columns)
@@ -1244,7 +1237,7 @@ class Flowmeter:
             result["flow_urg"] = [self.get_total_flow_urg_flags(flow, src, dst)]
             result["flow_cwr"] = [self.get_total_flow_cwr_flags(flow, src, dst)]
             result["flow_ece"] = [self.get_total_flow_ece_flags(flow, src, dst)]
-            result["downUpRatio"] = [self.get_upload_download_ratio(src_df, dst_df)]
+            result["downUpRatio"] = [self.get_upload_download_ratio(flow, src_df, dst_df)]
             result["avgPacketSize"] = [self.get_avg_packet_size(flow)]
             result["fAvgSegmentSize"] = [self.get_avg_forward_segment_size(src_df)]
             result["fAvgBytesPerBulk"] = [self.get_average_forward_bytes_per_burt(src_df)]
@@ -1274,7 +1267,7 @@ class Flowmeter:
         pool = Pool()
 
 
-        self._frames = pool.map(self._build_feature_from_flow, self._sessions)
+        self._frames = [self._build_feature_from_flow(sess) for sess in self._sessions]
         # print(self._frames) # Test
         
         final = pd.concat(self._frames)
@@ -1284,3 +1277,5 @@ class Flowmeter:
             final[column] = final[column].fillna(0)
 
         return final
+
+
